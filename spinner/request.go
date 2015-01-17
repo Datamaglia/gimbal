@@ -2,7 +2,6 @@ package spinner
 
 import (
     "net/http"
-    "strings"
     "time"
     "sync"
     "fmt"
@@ -18,7 +17,7 @@ type TestWrapper struct {
 
 func getRequest(wrapper *TestWrapper) {
     start := time.Now()
-    resp, err := http.Get(wrapper.Spec.Request.Url)
+    resp, err := http.Get(wrapper.Spec.Request.FullUrl())
     elapsed := time.Since(start)
 
     wrapper.Response = resp
@@ -37,12 +36,13 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
         for reqWrapper.Attempt < reqWrapper.Spec.Options.MaxAttempts {
             reqWrapper.Attempt += 1
 
-            switch strings.ToUpper(reqWrapper.Spec.Request.Method) {
+            switch reqWrapper.Spec.Request.Method {
+            case "GET":
+                getRequest(reqWrapper)
             case "POST":
                 postRequest(reqWrapper)
             default:
-                reqWrapper.Spec.Request.Method = "GET"
-                getRequest(reqWrapper)
+                panic("Invalid method encountered")
             }
 
             if reqWrapper.Err == nil {
@@ -63,7 +63,7 @@ func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
     defer waitGroup.Done()
 
     for respWrapper := range outChan {
-        fmt.Printf("%v (%v)\n", respWrapper.Spec.Request.Url,
+        fmt.Printf("%v (%v)\n", respWrapper.Spec.Request.FullUrl(),
                 respWrapper.Spec.Request.Method)
 
         if respWrapper.Err != nil {

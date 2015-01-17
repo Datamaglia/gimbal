@@ -11,6 +11,7 @@ type ConfigSettings struct {
 
 type TestConfig struct {
     Specs []*TestSpec
+    DefaultRequest *RequestSpec
     DefaultOptions *TestOptions
     Settings *ConfigSettings
 }
@@ -34,8 +35,8 @@ func LoadJsonConfig(filename string) *TestConfig {
     return config
 }
 
-// Update default options values from the system defaults, then update the
-// options for spec from those default values.
+// Update default options and request values from the system defaults, then
+// update the options for spec from those default values.
 func (t *TestConfig) SetDefaults() {
     if t.DefaultOptions == nil {
         t.DefaultOptions = new(TestOptions)
@@ -43,7 +44,15 @@ func (t *TestConfig) SetDefaults() {
     defaults := t.DefaultOptions
     defaults.UpdateDefaults()
 
+    if t.DefaultRequest == nil {
+        t.DefaultRequest = new(RequestSpec)
+    }
+
     for _, spec := range t.Specs {
+        // Request
+        spec.Request.Update(t.DefaultRequest)
+
+        // Options
         if spec.Options == nil {
             spec.Options = new(TestOptions)
         }
