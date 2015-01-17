@@ -41,6 +41,7 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
             case "POST":
                 postRequest(reqWrapper)
             default:
+                reqWrapper.Spec.Request.Method = "GET"
                 getRequest(reqWrapper)
             }
 
