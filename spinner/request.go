@@ -5,6 +5,7 @@ import (
     "strings"
     "time"
     "sync"
+    "fmt"
 )
 
 type TestWrapper struct {
@@ -61,7 +62,8 @@ func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
     defer waitGroup.Done()
 
     for respWrapper := range outChan {
-        println(respWrapper.Spec.Request.Url)
+        fmt.Printf("%v (%v)\n", respWrapper.Spec.Request.Url,
+                respWrapper.Spec.Request.Method)
 
         if respWrapper.Err != nil {
             printStatus(FAILURE, "Connection")
