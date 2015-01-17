@@ -28,39 +28,38 @@ func getRequest(wrapper *TestWrapper) {
 func postRequest(wrapper *TestWrapper) {
 }
 
-func requestHandler(reqChan <-chan *TestWrapper, respChan chan<- *TestWrapper,
+func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
         waitGroup *sync.WaitGroup) {
+    defer waitGroup.Done()
+
     for reqWrapper := range reqChan {
-        reqWrapper.Attempt += 1
+        for reqWrapper.Attempt < reqWrapper.Spec.Options.MaxAttempts {
+            reqWrapper.Attempt += 1
 
-        switch strings.ToUpper(reqWrapper.Spec.Request.Method) {
-        case "POST":
-            postRequest(reqWrapper)
-        default:
-            getRequest(reqWrapper)
-        }
-
-        respChan <- reqWrapper
-    }
-}
-
-func responseHandler(respChan <-chan *TestWrapper, reqChan chan<- *TestWrapper,
-        outChan chan<- *TestWrapper, waitGroup *sync.WaitGroup) {
-    for respWrapper := range respChan {
-        if respWrapper.Err != nil {
-            // Request failed
-            if respWrapper.Attempt < respWrapper.Spec.Options.MaxAttempts {
-                // Try again
-                reqChan <- respWrapper
-                continue
+            switch strings.ToUpper(reqWrapper.Spec.Request.Method) {
+            case "POST":
+                postRequest(reqWrapper)
+            default:
+                getRequest(reqWrapper)
             }
+
+            if reqWrapper.Err == nil {
+                // Succeeded, so we don't need any more attempts
+                break
+            }
+
+            // Wait some small but significant amount of time before hitting
+            // the server again
+            time.Sleep(100 * time.Millisecond)
         }
 
-        outChan <- respWrapper
+        outChan <- reqWrapper
     }
 }
 
 func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
+    defer waitGroup.Done()
+
     for respWrapper := range outChan {
         println(respWrapper.Spec.Request.Url)
 
@@ -79,25 +78,21 @@ func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
     }
 }
 
-// TODO We need to figure out a safe way to shut the whole thing down. The
-// problem is that the responseHandler goroutine re-submits failed jobs, so the
-// main goroutine has no idea when the work is done. One option would be to
-// tell the outputHandler goroutine how many specs there are and once it has
-// seen that many have it initiate a shutdown somehow (not sure exactly how
-// since it only has access to the outChan, which the others don't read from).
-// This isn't ideal, though, because it precludes processing streams of specs.
-
 func ExecuteTestConfig(config *TestConfig) {
-    reqChan := make(chan *TestWrapper)
-    respChan := make(chan *TestWrapper)
+    reqChan := make(chan *TestWrapper, 10)
     outChan := make(chan *TestWrapper)
 
-    waitGroup := new(sync.WaitGroup)
-    waitGroup.Add(3)
+    reqWaitGroup := new(sync.WaitGroup)
+    reqWaitGroup.Add(10)
 
-    go requestHandler(reqChan, respChan, waitGroup)
-    go responseHandler(respChan, reqChan, outChan, waitGroup)
-    go outputHandler(outChan, waitGroup)
+    for i := 0; i < 10; i++ {
+        go requestHandler(reqChan, outChan, reqWaitGroup)
+    }
+
+    outWaitGroup := new(sync.WaitGroup)
+    outWaitGroup.Add(1)
+
+    go outputHandler(outChan, outWaitGroup)
 
     for _, spec := range config.Specs {
         wrapper := new(TestWrapper)
@@ -105,7 +100,11 @@ func ExecuteTestConfig(config *TestConfig) {
         reqChan <- wrapper
     }
 
-    waitGroup.Wait()
+    close(reqChan)
+    reqWaitGroup.Wait()
+
+    close(outChan)
+    outWaitGroup.Wait()
 }
 
 // TODO Make this a method on the TestStatus so it can change the way it prints
