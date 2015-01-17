@@ -79,13 +79,20 @@ func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
 }
 
 func ExecuteTestConfig(config *TestConfig) {
+    var concurrentRequests int
+    if config.Settings.ConcurrentRequests < 1 {
+        concurrentRequests = 1
+    } else {
+        concurrentRequests = config.Settings.ConcurrentRequests
+    }
+
     reqChan := make(chan *TestWrapper, 10)
     outChan := make(chan *TestWrapper)
 
     reqWaitGroup := new(sync.WaitGroup)
-    reqWaitGroup.Add(10)
+    reqWaitGroup.Add(concurrentRequests)
 
-    for i := 0; i < 10; i++ {
+    for i := 0; i < concurrentRequests; i++ {
         go requestHandler(reqChan, outChan, reqWaitGroup)
     }
 

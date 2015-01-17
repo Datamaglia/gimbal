@@ -5,9 +5,14 @@ import (
     "io/ioutil"
 )
 
+type ConfigSettings struct {
+    ConcurrentRequests int
+}
+
 type TestConfig struct {
     Specs []*TestSpec
     DefaultOptions *TestOptions
+    Settings *ConfigSettings
 }
 
 // Load a configuration from a file in JSON format.
