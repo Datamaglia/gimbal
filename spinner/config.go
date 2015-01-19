@@ -12,6 +12,7 @@ type ConfigSettings struct {
 type TestConfig struct {
     Specs []*TestSpec
     DefaultRequest *RequestSpec
+    DefaultResponse *ResponseSpec
     DefaultOptions *TestOptions
     Settings *ConfigSettings
 }
@@ -41,8 +42,7 @@ func (t *TestConfig) SetDefaults() {
     if t.DefaultOptions == nil {
         t.DefaultOptions = new(TestOptions)
     }
-    defaults := t.DefaultOptions
-    defaults.UpdateDefaults()
+    t.DefaultOptions.UpdateDefaults()
 
     if t.DefaultRequest == nil {
         t.DefaultRequest = new(RequestSpec)
@@ -51,12 +51,13 @@ func (t *TestConfig) SetDefaults() {
     for _, spec := range t.Specs {
         // Request
         spec.Request.Update(t.DefaultRequest)
+        spec.Response.Update(t.DefaultResponse)
 
         // Options
         if spec.Options == nil {
             spec.Options = new(TestOptions)
         }
         options := spec.Options
-        options.Update(defaults)
+        options.Update(t.DefaultOptions)
     }
 }

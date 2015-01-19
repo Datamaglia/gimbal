@@ -115,6 +115,39 @@ type ResponseSpec struct {
     Attempts int
 }
 
+func (r *ResponseSpec) Update(defaults *ResponseSpec) {
+    if r.StatusCode == 0 {
+        if defaults.StatusCode != 0 {
+            r.StatusCode = defaults.StatusCode
+        }
+    }
+
+    // TODO Be smarter about merging the headers
+    if defaults.Headers != nil {
+        if r.Headers == nil {
+            r.Headers = defaults.Headers
+        } else {
+            for header, value := range defaults.Headers {
+                if r.Headers[header] == nil {
+                    r.Headers[header] = value
+                }
+            }
+        }
+    }
+
+    if r.TimeElapsed == 0.0 {
+        if defaults.TimeElapsed > 0.0 {
+            r.TimeElapsed = defaults.TimeElapsed
+        }
+    }
+
+    if r.Attempts == 0 {
+        if defaults.Attempts != 0 {
+            r.Attempts = defaults.Attempts
+        }
+    }
+}
+
 type TestSpec struct {
     Request *RequestSpec
     Response *ResponseSpec
