@@ -7,6 +7,9 @@ import (
 
 type ConfigSettings struct {
     ConcurrentRequests int
+    OutputSuccess bool
+    OutputWarning bool
+    OutputFailure bool
 }
 
 type TestConfig struct {

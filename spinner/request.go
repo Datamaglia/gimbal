@@ -33,7 +33,7 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
     defer waitGroup.Done()
 
     for reqWrapper := range reqChan {
-        client := http.Client{}
+        client := http.Client{Timeout: 10 * time.Second}
 
         for reqWrapper.Attempt < reqWrapper.Spec.Options.MaxAttempts {
             reqWrapper.Attempt += 1
@@ -55,6 +55,7 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
             resp, err := client.Do(req)
             elapsed := time.Since(start)
 
+            reqWrapper.Request = req
             reqWrapper.Response = resp
             reqWrapper.Err = err
             reqWrapper.TimeElapsed = elapsed.Seconds()
@@ -73,24 +74,22 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
     }
 }
 
-func outputHandler(outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
+func outputHandler(config *TestConfig, outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
     defer waitGroup.Done()
 
     for respWrapper := range outChan {
-        fmt.Printf("%v (%v)\n", respWrapper.Spec.Request.FullUrl(),
-                respWrapper.Spec.Request.Method)
+        respSpec := respWrapper.Spec.Response
 
         if respWrapper.Err != nil {
-            printStatus(FAILURE, "Connection")
+            config.PrintResult(respSpec.checkConnection(respWrapper))
         } else {
-            response := respWrapper.Response
-            responseSpec := respWrapper.Spec.Response
+            resp := respWrapper.Response
 
-            printStatus(SUCCESS, "Connection")
-            printStatus(responseSpec.checkStatusCode(response), "Status code")
-            printStatus(responseSpec.checkHeaders(response), "Headers")
-            printStatus(responseSpec.checkTimeElapsed(respWrapper.TimeElapsed), "Time elapsed")
-            printStatus(responseSpec.checkAttempts(respWrapper.Attempt), "Attempts")
+            config.PrintResult(respSpec.checkConnection(respWrapper))
+            config.PrintResult(respSpec.checkStatusCode(resp))
+            config.PrintResult(respSpec.checkHeaders(resp))
+            config.PrintResult(respSpec.checkTimeElapsed(respWrapper))
+            config.PrintResult(respSpec.checkAttempts(respWrapper))
         }
     }
 }
@@ -116,7 +115,7 @@ func ExecuteTestConfig(config *TestConfig) {
     outWaitGroup := new(sync.WaitGroup)
     outWaitGroup.Add(1)
 
-    go outputHandler(outChan, outWaitGroup)
+    go outputHandler(config, outChan, outWaitGroup)
 
     for _, spec := range config.Specs {
         wrapper := new(TestWrapper)
@@ -131,18 +130,27 @@ func ExecuteTestConfig(config *TestConfig) {
     outWaitGroup.Wait()
 }
 
-// TODO Make this a method on the TestStatus so it can change the way it prints
-func printStatus(status TestStatus, attribute string) {
+func (t *TestConfig) PrintResult(result TestResult) {
+    if result.Url != "" {
+        fmt.Printf("%v (%v)\n", result.Url, result.Method)
+    }
+
+    status := result.Status
+
     if status == UNKNOWN {
         return
     }
-    if status == SUCCESS {
-        color.Println("@g  \u2713", attribute)
+    if status == SUCCESS && t.Settings.OutputSuccess {
+        color.Printf("@g  \u2713 %v\n", result.Name)
     }
-    if status == WARNING {
-        color.Println("@y  \u2713", attribute)
+    if status == WARNING && t.Settings.OutputWarning {
+        color.Printf("@y  \u2713 %v\n", result.Name)
+        color.Printf("@y    Expected:\n      %v\n", result.Expected)
+        color.Printf("@y    Observed:\n      %v\n", result.Observed)
     }
-    if status == FAILURE {
-        color.Println("@r  \u2718", attribute)
+    if status == FAILURE && t.Settings.OutputFailure {
+        color.Printf("@r  \u2718 %v\n", result.Name)
+        color.Printf("@r    Expected:\n      %v\n", result.Expected)
+        color.Printf("@r    Observed:\n      %v\n", result.Observed)
     }
 }
