@@ -1,10 +1,16 @@
 package main
 
 import (
+    "flag"
+
     "github.com/datamaglia/gimbal/spinner"
 )
 
+var filename = flag.String("f", "", "Read the config from a file")
+
 func main() {
-    config := spinner.LoadJsonConfig("test.json")
+    flag.Parse()
+
+    config := spinner.LoadJsonConfig(*filename)
     spinner.ExecuteTestConfig(config)
 }
