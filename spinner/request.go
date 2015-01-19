@@ -77,19 +77,34 @@ func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
 func outputHandler(config *TestConfig, outChan <-chan *TestWrapper, waitGroup *sync.WaitGroup) {
     defer waitGroup.Done()
 
-    for respWrapper := range outChan {
-        respSpec := respWrapper.Spec.Response
+    for wrapper := range outChan {
+        respSpec := wrapper.Spec.Response
+        results := make([]TestResult, 0)
 
-        if respWrapper.Err != nil {
-            config.PrintResult(respSpec.checkConnection(respWrapper))
+        if wrapper.Err != nil {
+            results = append(results, respSpec.checkConnection(wrapper))
         } else {
-            resp := respWrapper.Response
+            resp := wrapper.Response
 
-            config.PrintResult(respSpec.checkConnection(respWrapper))
-            config.PrintResult(respSpec.checkStatusCode(resp))
-            config.PrintResult(respSpec.checkHeaders(resp))
-            config.PrintResult(respSpec.checkTimeElapsed(respWrapper))
-            config.PrintResult(respSpec.checkAttempts(respWrapper))
+            results = append(results, respSpec.checkConnection(wrapper))
+            results = append(results, respSpec.checkStatusCode(resp))
+            results = append(results, respSpec.checkHeaders(resp))
+            results = append(results, respSpec.checkTimeElapsed(wrapper))
+            results = append(results, respSpec.checkAttempts(wrapper))
+        }
+
+        for _, result := range results {
+            if result.Status == WARNING {
+                config.TotalWarnings += 1
+            }
+            if result.Status == FAILURE {
+                config.TotalFailures += 1
+            }
+            if result.Status != UNKNOWN {
+                config.TotalTests += 1
+            }
+
+            config.PrintResult(result)
         }
     }
 }
@@ -128,9 +143,17 @@ func ExecuteTestConfig(config *TestConfig) {
 
     close(outChan)
     outWaitGroup.Wait()
+
+    if ! config.Settings.SuppressOutput {
+        config.PrintSummary()
+    }
 }
 
 func (t *TestConfig) PrintResult(result TestResult) {
+    if t.Settings.SuppressOutput {
+        return
+    }
+
     if result.Url != "" {
         fmt.Printf("%v (%v)\n", result.Url, result.Method)
     }
@@ -153,4 +176,13 @@ func (t *TestConfig) PrintResult(result TestResult) {
         color.Printf("@r    Expected:\n      %v\n", result.Expected)
         color.Printf("@r    Observed:\n      %v\n", result.Observed)
     }
+}
+
+func (t *TestConfig) PrintSummary() {
+    r := t.TotalTests
+    w := t.TotalWarnings
+    f := t.TotalFailures
+    p := r - w - f
+    fmt.Printf("\n")
+    color.Printf("Summary: %d tests run, @g%d passed@|, @y%d warnings@|, @r%d failures@|", r, p, w, f)
 }

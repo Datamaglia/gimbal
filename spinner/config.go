@@ -10,6 +10,7 @@ type ConfigSettings struct {
     OutputSuccess bool
     OutputWarning bool
     OutputFailure bool
+    SuppressOutput bool
 }
 
 type TestConfig struct {
@@ -18,6 +19,10 @@ type TestConfig struct {
     DefaultResponse *ResponseSpec
     DefaultOptions *TestOptions
     Settings *ConfigSettings
+
+    TotalTests int
+    TotalFailures int
+    TotalWarnings int
 }
 
 // Load a configuration from a file in JSON format.
