@@ -1,0 +1,178 @@
+{
+    "settings": {
+        "concurrentRequests": 3,
+        "outputSuccess": true,
+        "outputWarning": true,
+        "outputFailure": true
+    },
+    "defaultOptions": {
+        "maxAttempts": 10,
+        "timeElapsedDelta": 0.5
+    },
+    "defaultRequest": {
+        "host": "httpbin.org",
+        "port": 443,
+        "SSL": true,
+        "method": "GET"
+    },
+    "defaultResponse": {
+        "statusCode": 200,
+        "timeElapsed": 1.0,
+        "attempts": 1
+    },
+    "specs": [{
+        "request": {
+            "url": "http://fakeandnonexistentdomain.com"
+        },
+        "response": {
+            "statusCode": 201
+        }
+    },{
+        "request": {
+            "uri": "/"
+        },
+        "response": {
+        }
+    },{
+        "request": {
+            "uri": "/ip"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/user-agent"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/headers",
+            "headers": {
+                "Test-Header": ["Gimbal"]
+            }
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/get"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"]
+            }
+        }
+    },{
+        "request": {
+            "method": "POST",
+            "uri": "/post"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Server": ["nginx"]
+            }
+        }
+    },{
+        "request": {
+            "method": "PATCH",
+            "uri": "/patch"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Server": ["nginx"]
+            }
+        }
+    },{
+        "request": {
+            "method": "PUT",
+            "uri": "/put"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Server": ["nginx"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/encoding/utf8"
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["text/html; charset=utf-8"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/gzip",
+            "headers": {
+                "Accept-Encoding": ["gzip, deflate, sdch"]
+            }
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Content-Encoding": ["gzip"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/deflate",
+            "headers": {
+                "Accept-Encoding": ["gzip, deflate, sdch"]
+            }
+        },
+        "response": {
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Content-Encoding": ["deflate"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/status/418"
+        },
+        "response": {
+            "statusCode": 418
+        }
+    },{
+        "request": {
+            "uri": "/response-headers?Test-Header=Test-Value"
+        },
+        "response": {
+            "statusCode": 200,
+            "headers": {
+                "Test-Header": ["Test-Value"]
+            }
+        }
+    },{
+        "request": {
+            "uri": "/redirect-to?url=/"
+        },
+        "response": {
+            "statusCode": 200
+        }
+    },{
+        "request": {
+            "uri": "/cache",
+            "headers": {
+                "If-None-Match": ["*"]
+            }
+        },
+        "response": {
+            "statusCode": 304
+        }
+    }]
+}
