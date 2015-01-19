@@ -37,7 +37,7 @@ func (r *RequestSpec) FullUrl() string {
     } else {
         proto = "http"
     }
-    return fmt.Sprintf("%v://%v%v:%v", proto, r.Host, r.Uri, r.Port)
+    return fmt.Sprintf("%v://%v:%v%v", proto, r.Host, r.Port, r.Uri)
 }
 
 func (r *RequestSpec) Update(defaults *RequestSpec) {
