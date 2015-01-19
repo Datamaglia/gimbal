@@ -1,49 +1,63 @@
 package spinner
 
 import (
-    "net/http"
-    "time"
-    "sync"
+    "bytes"
     "fmt"
+    "io"
+    "net/http"
+    "net/url"
+    "sync"
+    "time"
+
+    "github.com/wsxiaoys/terminal/color"
 )
 
 type TestWrapper struct {
     Spec *TestSpec
+    Request *http.Request
     Response *http.Response
     TimeElapsed float64
     Attempt int
     Err error
 }
 
-func getRequest(wrapper *TestWrapper) {
-    start := time.Now()
-    resp, err := http.Get(wrapper.Spec.Request.FullUrl())
-    elapsed := time.Since(start)
-
-    wrapper.Response = resp
-    wrapper.Err = err
-    wrapper.TimeElapsed = elapsed.Seconds()
+// Create a custom ReadCloser because that's the only way we can get a string
+// into the request body (because Go doesn't have type unions).
+type BodyWrapper struct {
+    io.Reader
 }
-
-func postRequest(wrapper *TestWrapper) {
-}
+func (BodyWrapper) Close() error { return nil }
 
 func requestHandler(reqChan <-chan *TestWrapper, outChan chan<- *TestWrapper,
         waitGroup *sync.WaitGroup) {
     defer waitGroup.Done()
 
     for reqWrapper := range reqChan {
+        client := http.Client{}
+
         for reqWrapper.Attempt < reqWrapper.Spec.Options.MaxAttempts {
             reqWrapper.Attempt += 1
 
-            switch reqWrapper.Spec.Request.Method {
-            case "GET":
-                getRequest(reqWrapper)
-            case "POST":
-                postRequest(reqWrapper)
-            default:
-                panic("Invalid method encountered")
+            req := new(http.Request)
+            req.Method = reqWrapper.Spec.Request.Method
+
+            // TODO This conversion should be moved to the config read stage
+            reqUrl, err := url.Parse(reqWrapper.Spec.Request.FullUrl())
+            if err != nil {
+                panic("Invalid URL")
             }
+            req.URL = reqUrl
+
+            req.Header = reqWrapper.Spec.Request.Headers
+            req.Body = BodyWrapper{bytes.NewBufferString(reqWrapper.Spec.Request.Data)}
+
+            start := time.Now()
+            resp, err := client.Do(req)
+            elapsed := time.Since(start)
+
+            reqWrapper.Response = resp
+            reqWrapper.Err = err
+            reqWrapper.TimeElapsed = elapsed.Seconds()
 
             if reqWrapper.Err == nil {
                 // Succeeded, so we don't need any more attempts
@@ -123,12 +137,12 @@ func printStatus(status TestStatus, attribute string) {
         return
     }
     if status == SUCCESS {
-        println("  \u2713", attribute)
+        color.Println("@g  \u2713", attribute)
     }
     if status == WARNING {
-        println("  \u2713", attribute)
+        color.Println("@y  \u2713", attribute)
     }
     if status == FAILURE {
-        println("  \u2718", attribute)
+        color.Println("@r  \u2718", attribute)
     }
 }
