@@ -15,7 +15,6 @@
   <body>
     <div class="wrapper">
       <header>
-        <img src="logo.svg" alt="Logo" />
         <h1>Gimbal</h1>
         <p>An HTTP testing system</p>
 
@@ -33,6 +32,38 @@
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h3>
 
 <p>Gimbal is designed for testing HTTP APIs (REST or otherwise) and web sites. It allows the developer to describe requests and the responses those requests are expected to generate using a simple JSON or YAML document. Since Gimbal ships as a single, compiled binary it is easy to run in a variety of cases, including during a CI build process. It can also be scheduled using <code>cron</code> or similar.</p>
+
+<h3>
+<a id="example-test-suite" class="anchor" href="#example-test-suite" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Test Suite</h3>
+
+<p>Below is an extremely simple (trivially so) test suite for use with Gimbal. If you'd like to see a more complete example, check out <a href="https://github.com/Datamaglia/gimbal/blob/master/examples/httpbin.json">httpbin.json</a>, which tests a number of the <a href="http://httpbin.org/">httpbin</a> endpoints. For now, let's take a quick look at the simple example.</p>
+
+<p>A Gimbal test suite is defined using a JSON file (YAML and other formats will be supported soon). There is one required key, <code>specs</code>, which hold a list of test specs to be run. Each spec has two required bits: the request, which defines the request to send, and the response, which defines assertions about the response that comes back from the server.</p>
+
+<p>There are two ways to define a request. The first example below uses the <code>url</code> key, which defines an entire URL string, including the protocol, URI, and (optionally) the port. The first test attempts to hit a server that doesn't exist, this is so we can see a failure when it runs. The second spec defines the pieces of the URL individually. The reason for this second option is that any of these can be defined once for the whole file, and the global values will be copied into any spec that doesn't have them. This cuts down on the required typing and simplifies updates.</p>
+
+<div class="highlight highlight-json"><pre>{
+    <span class="pl-s1"><span class="pl-pds">"</span>specs<span class="pl-pds">"</span></span>: [{
+        <span class="pl-s1"><span class="pl-pds">"</span>request<span class="pl-pds">"</span></span>: {
+            <span class="pl-s1"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>http://fakeandnonexistentdomain.com<span class="pl-pds">"</span></span>
+        },
+        <span class="pl-s1"><span class="pl-pds">"</span>response<span class="pl-pds">"</span></span>: {
+            <span class="pl-s1"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>
+        }
+    },{
+        <span class="pl-s1"><span class="pl-pds">"</span>request<span class="pl-pds">"</span></span>: {
+            <span class="pl-s1"><span class="pl-pds">"</span>host<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>gimbal.datamaglia.com<span class="pl-pds">"</span></span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>method<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>GET<span class="pl-pds">"</span></span>
+        },
+        <span class="pl-s1"><span class="pl-pds">"</span>response<span class="pl-pds">"</span></span>: {
+            <span class="pl-s1"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>headers<span class="pl-pds">"</span></span>: {
+                <span class="pl-s1"><span class="pl-pds">"</span>Content-Type<span class="pl-pds">"</span></span>: [<span class="pl-s1"><span class="pl-pds">"</span>text/html; charset=utf-8<span class="pl-pds">"</span></span>]
+            }
+        }
+    }]
+}</pre></div>
 
 <h3>
 <a id="why-gimbal" class="anchor" href="#why-gimbal" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why "Gimbal"</h3>

@@ -2,7 +2,7 @@
 
 body {
   padding:50px;
-  font:16px/1.6 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font:14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
   color:#777;
   font-weight:300;
 }
@@ -60,7 +60,7 @@ blockquote {
 code, pre {
   font-family:Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
   color:#333;
-  font-size:14px;
+  font-size:12px;
 }
 
 pre {
@@ -99,10 +99,6 @@ header {
   width:270px;
   float:left;
   position:fixed;
-}
-
-header img {
-  width: 75px;
 }
 
 header ul {
