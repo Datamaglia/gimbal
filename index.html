@@ -65,6 +65,15 @@
     }]
 }</pre></div>
 
+<p>A couple things to point out. First, notice that the header value is a list. This is in case there are multiples, all values are included in a single key (to make it valid JSON). Next, and probably self-explanatory, the <code>statusCode</code> key asserts which status code we expect back from the request.</p>
+
+<h3>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building</h3>
+
+<p>Right now Gimbal is under heavy development and there aren't any releases. However, you can try it out by cloning the repository (see the link the left) and building it yourself. First, you'll need a functioning Go toolchain. There are <a href="http://golang.org/doc/install">instructions</a> on the Go web site. The <a href="http://howistart.org/posts/go/1">Go article</a> at "How I Start" is also an excellent read if you want to become more familiar with how Go development "works".</p>
+
+<p>Once you've got that set up, you can run <code>go get github.com/datamaglia/gimbal</code> to grab the repo (or fork it and change the GitHub path to your fork). Switch to the source directory and run <code>go get &amp;&amp; go build</code> and you'll have a binary in no time. Then you can run one of the examples. Try <code>./gimbal -f examples/httpbin.json</code>.</p>
+
 <h3>
 <a id="why-gimbal" class="anchor" href="#why-gimbal" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why "Gimbal"</h3>
 
