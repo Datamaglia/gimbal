@@ -7,10 +7,16 @@ import (
 
 type ConfigSettings struct {
     ConcurrentRequests int
-    OutputSuccess bool
-    OutputWarning bool
-    OutputFailure bool
+    SuppressSuccess bool
+    SuppressWarning bool
+    SuppressFailure bool
     SuppressOutput bool
+}
+
+func (c *ConfigSettings) UpdateDefaults() {
+    if c.ConcurrentRequests < 1 {
+        c.ConcurrentRequests = CONCURRENT_REQUESTS
+    }
 }
 
 type TestConfig struct {
@@ -47,6 +53,11 @@ func LoadJsonConfig(filename string) *TestConfig {
 // Update default options and request values from the system defaults, then
 // update the options for spec from those default values.
 func (t *TestConfig) SetDefaults() {
+    if t.Settings == nil {
+        t.Settings = new(ConfigSettings)
+    }
+    t.Settings.UpdateDefaults()
+
     if t.DefaultOptions == nil {
         t.DefaultOptions = new(TestOptions)
     }
@@ -54,6 +65,9 @@ func (t *TestConfig) SetDefaults() {
 
     if t.DefaultRequest == nil {
         t.DefaultRequest = new(RequestSpec)
+    }
+    if t.DefaultResponse == nil {
+        t.DefaultResponse = new(ResponseSpec)
     }
 
     for _, spec := range t.Specs {

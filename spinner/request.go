@@ -110,12 +110,7 @@ func outputHandler(config *TestConfig, outChan <-chan *TestWrapper, waitGroup *s
 }
 
 func ExecuteTestConfig(config *TestConfig) {
-    var concurrentRequests int
-    if config.Settings.ConcurrentRequests < 1 {
-        concurrentRequests = 1
-    } else {
-        concurrentRequests = config.Settings.ConcurrentRequests
-    }
+    concurrentRequests := config.Settings.ConcurrentRequests
 
     reqChan := make(chan *TestWrapper, 10)
     outChan := make(chan *TestWrapper)
@@ -163,15 +158,15 @@ func (t *TestConfig) PrintResult(result TestResult) {
     if status == UNKNOWN {
         return
     }
-    if status == SUCCESS && t.Settings.OutputSuccess {
+    if status == SUCCESS && ! t.Settings.SuppressSuccess {
         color.Printf("@g  \u2713 %v\n", result.Name)
     }
-    if status == WARNING && t.Settings.OutputWarning {
+    if status == WARNING && ! t.Settings.SuppressWarning {
         color.Printf("@y  \u2713 %v\n", result.Name)
         color.Printf("@y    Expected:\n      %v\n", result.Expected)
         color.Printf("@y    Observed:\n      %v\n", result.Observed)
     }
-    if status == FAILURE && t.Settings.OutputFailure {
+    if status == FAILURE && ! t.Settings.SuppressFailure {
         color.Printf("@r  \u2718 %v\n", result.Name)
         color.Printf("@r    Expected:\n      %v\n", result.Expected)
         color.Printf("@r    Observed:\n      %v\n", result.Observed)

@@ -1,9 +1,9 @@
 {
     "settings": {
         "concurrentRequests": 3,
-        "outputSuccess": true,
-        "outputWarning": true,
-        "outputFailure": true
+        "suppressSuccess": true,
+        "suppressWarning": true,
+        "suppressFailure": true
     },
     "defaultOptions": {
         "maxAttempts": 10,
