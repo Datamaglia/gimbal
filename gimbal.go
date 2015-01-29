@@ -2,9 +2,10 @@ package main
 
 import (
     "flag"
-    "os"
+//    "os"
 
-    "github.com/datamaglia/gimbal/spinner"
+    "github.com/datamaglia/gimbal/spec"
+    "github.com/datamaglia/gimbal/runner"
 )
 
 var filename = flag.String("f", "", "Read the config from a file")
@@ -13,16 +14,6 @@ var quiet = flag.Bool("q", false, "Suppress all output")
 func main() {
     flag.Parse()
 
-    config := spinner.LoadJsonConfig(*filename)
-    if *quiet {
-        config.Settings.SuppressOutput = true
-    }
-
-    spinner.ExecuteTestConfig(config)
-
-    if config.TotalWarnings != 0 || config.TotalFailures != 0 {
-        os.Exit(10)
-    } else {
-        os.Exit(0)
-    }
+    config := spec.LoadJsonFile(*filename)
+    runner.RunSpec(config)
 }
