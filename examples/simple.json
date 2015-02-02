@@ -1,11 +1,27 @@
 {
-    "name": "Simple Tests",
+    "host": "gimbal.datamaglia.com",
     "maxAttempts": 1,
-
-    "host": "lesica.com",
-
+    "name": "Simple Tests",
     "specs": [
-        { "name": "root", "uri": "/" },
-        { "name": "404", "uri": "/404", "statusCode": 404 }
+        {
+            "name": "root",
+            "responseHeaders": {
+                "Content-Type": [
+                    "text/html; charset=utf-8"
+                ]
+            },
+            "statusCode": 200,
+            "uri": "/"
+        },
+        {
+            "name": "404",
+            "responseHeaders": {
+                "Content-Type": [
+                    "text/html; charset=utf-8"
+                ]
+            },
+            "statusCode": 404,
+            "uri": "/404"
+        }
     ]
 }
