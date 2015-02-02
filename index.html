@@ -38,34 +38,39 @@
 
 <p>Below is an extremely simple (trivially so) test suite for use with Gimbal. If you'd like to see a more complete example, check out <a href="https://github.com/Datamaglia/gimbal/blob/master/examples/httpbin.json">httpbin.json</a>, which tests a number of the <a href="http://httpbin.org/">httpbin</a> endpoints. For now, let's take a quick look at the simple example.</p>
 
-<p>A Gimbal test suite is defined using a JSON file (YAML and other formats will be supported soon). There is one required key, <code>specs</code>, which hold a list of test specs to be run. Each spec has two required bits: the request, which defines the request to send, and the response, which defines assertions about the response that comes back from the server.</p>
+<p>A Gimbal test suite is defined using a JSON file (YAML and other formats will be supported soon). The configuration is called a "spec". Specs are recursive, they can contain other specs. Configuration options contained in the parent are pushed down into the children. This forms a kind of tree, of which only the leaf nodes will actually result in HTTP requests.</p>
 
-<p>There are two ways to define a request. The first example below uses the <code>url</code> key, which defines an entire URL string, including the protocol, URI, and (optionally) the port. The first test attempts to hit a server that doesn't exist, this is so we can see a failure when it runs. The second spec defines the pieces of the URL individually. The reason for this second option is that any of these can be defined once for the whole file, and the global values will be copied into any spec that doesn't have them. This cuts down on the required typing and simplifies updates.</p>
+<p>Each spec can describe an HTTP request and the response that is expected back. There are also some additional parameters, like how many times a request should be attempted before giving up. A request can be minimally specified by a <code>host</code> (which will result in a request for the URI <code>/</code>). The host will be inherited by child specs, which means you can define it just once on the parent and then specify URIs on the children.</p>
 
 <div class="highlight highlight-json"><pre>{
-    <span class="pl-s1"><span class="pl-pds">"</span>specs<span class="pl-pds">"</span></span>: [{
-        <span class="pl-s1"><span class="pl-pds">"</span>request<span class="pl-pds">"</span></span>: {
-            <span class="pl-s1"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>http://fakeandnonexistentdomain.com<span class="pl-pds">"</span></span>
-        },
-        <span class="pl-s1"><span class="pl-pds">"</span>response<span class="pl-pds">"</span></span>: {
-            <span class="pl-s1"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>
-        }
-    },{
-        <span class="pl-s1"><span class="pl-pds">"</span>request<span class="pl-pds">"</span></span>: {
-            <span class="pl-s1"><span class="pl-pds">"</span>host<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>gimbal.datamaglia.com<span class="pl-pds">"</span></span>,
-            <span class="pl-s1"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>,
-            <span class="pl-s1"><span class="pl-pds">"</span>method<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>GET<span class="pl-pds">"</span></span>
-        },
-        <span class="pl-s1"><span class="pl-pds">"</span>response<span class="pl-pds">"</span></span>: {
+    <span class="pl-s1"><span class="pl-pds">"</span>host<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>gimbal.datamaglia.com<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>maxAttempts<span class="pl-pds">"</span></span>: <span class="pl-c1">1</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>Simple Tests<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>specs<span class="pl-pds">"</span></span>: [
+        {
+            <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>responseHeaders<span class="pl-pds">"</span></span>: {
+                <span class="pl-s1"><span class="pl-pds">"</span>Content-Type<span class="pl-pds">"</span></span>: [
+                    <span class="pl-s1"><span class="pl-pds">"</span>text/html; charset=utf-8<span class="pl-pds">"</span></span>
+                ]
+            },
             <span class="pl-s1"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
-            <span class="pl-s1"><span class="pl-pds">"</span>headers<span class="pl-pds">"</span></span>: {
-                <span class="pl-s1"><span class="pl-pds">"</span>Content-Type<span class="pl-pds">"</span></span>: [<span class="pl-s1"><span class="pl-pds">"</span>text/html; charset=utf-8<span class="pl-pds">"</span></span>]
-            }
+            <span class="pl-s1"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>
+        },
+        {
+            <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>404<span class="pl-pds">"</span></span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>responseHeaders<span class="pl-pds">"</span></span>: {
+                <span class="pl-s1"><span class="pl-pds">"</span>Content-Type<span class="pl-pds">"</span></span>: [
+                    <span class="pl-s1"><span class="pl-pds">"</span>text/html; charset=utf-8<span class="pl-pds">"</span></span>
+                ]
+            },
+            <span class="pl-s1"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">404</span>,
+            <span class="pl-s1"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>/404<span class="pl-pds">"</span></span>
         }
-    }]
+    ]
 }</pre></div>
 
-<p>A couple things to point out. First, notice that the header value is a list. This is in case there are multiples, all values are included in a single key (to make it valid JSON). Next, and probably self-explanatory, the <code>statusCode</code> key asserts which status code we expect back from the request.</p>
+<p>A couple things to point out. First, notice that the header value is a list. This is in case there are multiple instance of a given header. All values are included in a single key (to make it valid JSON). Next, and probably self-explanatory, the <code>statusCode</code> key asserts which status code we expect back from the request.</p>
 
 <h3>
 <a id="building" class="anchor" href="#building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building</h3>
