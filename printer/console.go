@@ -36,7 +36,10 @@ func ResultsToConsole(resultSet *ResultSet) {
 			colorPrefix = "@r"
 		}
 		color.Printf(symbolPrefix+"%v\n", result.Message)
-		color.Printf(colorPrefix+"    Expected: %v\n", result.Expected)
 		color.Printf(colorPrefix+"    Observed: %v\n", result.Observed)
+
+		if result.Status != SUCCESS {
+			color.Printf(colorPrefix+"    Expected: %v\n", result.Expected)
+		}
 	}
 }
