@@ -1,17 +1,18 @@
 package printer
 
 import (
-    "fmt"
-
-    "github.com/datamaglia/gimbal/runner"
+	"fmt"
 )
 
-func ResultsToConsole(resultSet *runner.ResultSet) {
-    for _, result := range resultSet.Results {
-        if (result.Spec.Name == "") {
-            fmt.Printf("%s\n", result.Spec.Url())
-        } else {
-            fmt.Printf("%s\n", result.Spec.Name)
-        }
-    }
+func ResultsToConsole(resultSet *ResultSet) {
+	if resultSet.Spec.Name == "" {
+		fmt.Printf("%v\n", resultSet.Spec.Url())
+	} else {
+		fmt.Printf("%v\n", resultSet.Spec.Name)
+	}
+	for _, result := range resultSet.Results {
+		fmt.Printf("  %v\n", result.Message)
+		fmt.Printf("    Expected: %v\n", result.Expected)
+		fmt.Printf("    Observed: %v\n", result.Observed)
+	}
 }
