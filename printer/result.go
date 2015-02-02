@@ -38,3 +38,23 @@ func (s *ResultSet) Success() bool {
 	}
 	return success
 }
+
+func (s *ResultSet) Status() ResultStatus {
+	failure := false
+	warning := false
+	for _, result := range s.Results {
+		if result.Status == WARNING {
+			warning = true
+		}
+		if result.Status == FAILURE {
+			failure = true
+		}
+	}
+	if failure {
+		return FAILURE
+	}
+	if warning {
+		return WARNING
+	}
+	return SUCCESS
+}
