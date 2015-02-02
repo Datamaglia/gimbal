@@ -97,7 +97,7 @@ func checkTimeElapsed(w *Wrapper) *printer.Result {
 func checkResponseHeaders(w *Wrapper) []*printer.Result {
 	expectedHeaders := *w.Spec.ResponseHeaders
 	observedHeaders := w.LastAttempt().Resp.Header
-	results := make([]*printer.Result, len(expectedHeaders))
+	results := make([]*printer.Result, 0)
 	for header, expectedValues := range expectedHeaders {
 		observedValues := observedHeaders[header]
 		for _, expectedValue := range expectedValues {
