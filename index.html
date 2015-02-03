@@ -31,13 +31,13 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>
-<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h3>
+        <h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
 
 <p>Gimbal is designed for testing HTTP APIs (REST or otherwise) and web sites. It allows the developer to describe requests and the responses those requests are expected to generate using a simple JSON or YAML document. Since Gimbal ships as a single, compiled binary it is easy to run in a variety of cases, including during a CI build process. It can also be scheduled using <code>cron</code> or similar.</p>
 
-<h3>
-<a id="example-test-spec" class="anchor" href="#example-test-spec" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Test Spec</h3>
+<h2>
+<a id="example-test-spec" class="anchor" href="#example-test-spec" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Test Spec</h2>
 
 <p>Below is an extremely simple (trivially so) test suite for use with Gimbal. If you'd like to see a more complete example, check out <a href="https://github.com/Datamaglia/gimbal/blob/master/examples/httpbin.json">httpbin.json</a>, which tests a number of the <a href="http://httpbin.org/">httpbin</a> endpoints. For now, let's take a quick look at the simple example.</p>
 
@@ -75,15 +75,139 @@
 
 <p>A couple things to point out. First, notice that the header value is a list. This is in case there are multiple instance of a given header. All values are included in a single key (to make it valid JSON). Next, and probably self-explanatory, the <code>statusCode</code> key asserts which status code we expect back from the request.</p>
 
-<h3>
-<a id="building" class="anchor" href="#building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building</h3>
+<h2>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building</h2>
 
 <p>Right now Gimbal is under heavy development and there aren't any releases. However, you can try it out by cloning the repository (see the link the left) and building it yourself. First, you'll need a functioning Go toolchain. There are <a href="http://golang.org/doc/install">instructions</a> on the Go web site. The <a href="http://howistart.org/posts/go/1">Go article</a> at "How I Start" is also an excellent read if you want to become more familiar with how Go development "works".</p>
 
 <p>Once you've got that set up, you can run <code>go get github.com/datamaglia/gimbal</code> to grab the repo (or fork it and change the GitHub path to your fork). Switch to the source directory and run <code>go get &amp;&amp; go build</code> and you'll have a binary in no time. Then you can run one of the examples. Try <code>./gimbal -f examples/httpbin.json</code>.</p>
 
+<h2>
+<a id="specification" class="anchor" href="#specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Specification</h2>
+
+<p>The following is a list of valid spec configuration parameters. Some of these have not yet been implemented.</p>
+
 <h3>
-<a id="why-gimbal" class="anchor" href="#why-gimbal" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why "Gimbal"</h3>
+<a id="name" class="anchor" href="#name" aria-hidden="true"><span class="octicon octicon-link"></span></a>name</h3>
+
+<p>String. A descriptive name for the spec. Not used internally but will be logged
+in some cases for debugging and on failures. Parent names will be prepended, so
+if a spec named A has a child spec named B when the child spec is run its name
+will appear as "A :: B". Default is "".</p>
+
+<h3>
+<a id="concurrentrequests" class="anchor" href="#concurrentrequests" aria-hidden="true"><span class="octicon octicon-link"></span></a>concurrentRequests</h3>
+
+<p>Integer. The maximum number of concurrent requests that will be made. If this is set to
+1, requests will be run in serial. Default is 1.</p>
+
+<h3>
+<a id="outputlevel" class="anchor" href="#outputlevel" aria-hidden="true"><span class="octicon octicon-link"></span></a>outputLevel</h3>
+
+<p>String. The type of messages that should be included in the output. One of
+"success", "warning", and "failure". Levels include subsequent levels. Default
+is "success".</p>
+
+<h3>
+<a id="maxattempts" class="anchor" href="#maxattempts" aria-hidden="true"><span class="octicon octicon-link"></span></a>maxAttempts</h3>
+
+<p>Integer. The maximum number of times to attempt a request before it is declared
+a failure. Default is 10.</p>
+
+<h3>
+<a id="timeelapseddelta" class="anchor" href="#timeelapseddelta" aria-hidden="true"><span class="octicon octicon-link"></span></a>timeElapsedDelta</h3>
+
+<p>Float. If the time a request takes is greater than <code>maxTimeElapsed</code>, but by less
+than this amount, the result will be a warning, not a failure. This allows for
+some "wiggle room". Default is 0.0.</p>
+
+<h3>
+<a id="host" class="anchor" href="#host" aria-hidden="true"><span class="octicon octicon-link"></span></a>host</h3>
+
+<p>String. The host to contact, such as <code>httpbin.org</code>.</p>
+
+<h3>
+<a id="port" class="anchor" href="#port" aria-hidden="true"><span class="octicon octicon-link"></span></a>port</h3>
+
+<p>Integer. The port on which to contact the host. Default is 80 when <code>SSL</code> is
+false and 443 when <code>SSL</code> is true.</p>
+
+<h3>
+<a id="ssl" class="anchor" href="#ssl" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssl</h3>
+
+<p>Boolean. Whether to use SSL for the request. Default is false.</p>
+
+<h3>
+<a id="method" class="anchor" href="#method" aria-hidden="true"><span class="octicon octicon-link"></span></a>method</h3>
+
+<p>String. The HTTP verb to use for the request. Default is "GET".</p>
+
+<h3>
+<a id="statuscode" class="anchor" href="#statuscode" aria-hidden="true"><span class="octicon octicon-link"></span></a>statusCode</h3>
+
+<p>Integer. The expected status code of the response. Default is 200.</p>
+
+<h3>
+<a id="maxtimeelapsed" class="anchor" href="#maxtimeelapsed" aria-hidden="true"><span class="octicon octicon-link"></span></a>maxTimeElapsed</h3>
+
+<p>Float. The maximum time the request can take and still be considered a success,
+in seconds. Default is 10.0.</p>
+
+<h3>
+<a id="requestheaders" class="anchor" href="#requestheaders" aria-hidden="true"><span class="octicon octicon-link"></span></a>requestHeaders</h3>
+
+<p>Object. Mapping of header names to lists of header values that will be included
+in the request. Default is <code>{}</code>.</p>
+
+<h3>
+<a id="responseheaders" class="anchor" href="#responseheaders" aria-hidden="true"><span class="octicon octicon-link"></span></a>responseHeaders</h3>
+
+<p>Object. Mapping of header names to lists of header values that are expected to
+be included in the response. Unless <code>exactResponseHeaders</code> is true, the response
+can contain additional headers, so this represents a minimum. Default is <code>{}</code>.</p>
+
+<h3>
+<a id="exactresponseheaders" class="anchor" href="#exactresponseheaders" aria-hidden="true"><span class="octicon octicon-link"></span></a>exactResponseHeaders</h3>
+
+<p>Boolean. If true, the <code>responseHeaders</code> value will be treated as an exact
+enumeration of headers and values, if the response includes additional headers
+the spec will fail. Default is false.</p>
+
+<h3>
+<a id="uri" class="anchor" href="#uri" aria-hidden="true"><span class="octicon octicon-link"></span></a>uri</h3>
+
+<p>String. The URI to request from the host. Default is "/".</p>
+
+<h3>
+<a id="specs" class="anchor" href="#specs" aria-hidden="true"><span class="octicon octicon-link"></span></a>specs</h3>
+
+<p>List. A recursive list of specs to run. Each of these will inherit properties
+from the parent as necessary. If this is set, then the spec that contains the
+list will not run on its own. In other words, if you think about the
+configuration as a tree, only leaf nodes actually cause a test to be run.
+Default is [].</p>
+
+<h3>
+<a id="requestdata" class="anchor" href="#requestdata" aria-hidden="true"><span class="octicon octicon-link"></span></a>requestData</h3>
+
+<p>String. The raw data to include with the request. Default is "".</p>
+
+<h3>
+<a id="responsedata" class="anchor" href="#responsedata" aria-hidden="true"><span class="octicon octicon-link"></span></a>responseData</h3>
+
+<p>String. The raw data that should be included with the response. If set to the
+empty string, no check is performed. Default is "".</p>
+
+<h3>
+<a id="vars-not-yet-implemented" class="anchor" href="#vars-not-yet-implemented" aria-hidden="true"><span class="octicon octicon-link"></span></a>vars (not yet implemented)</h3>
+
+<p>Object. A map of variable assignments that can be used in the given spec and all
+its children. The keys must be strings. For now, the values must be strings or
+numbers. Eventually lists will be supported and a <code>forEach</code> option will be added
+to run a given spec once for each value in the list. Default is <code>{}</code>.</p>
+
+<h2>
+<a id="why-gimbal" class="anchor" href="#why-gimbal" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why "Gimbal"</h2>
 
 <p><a href="https://en.wikipedia.org/wiki/Gimbal">Gimbals</a> help sailors, photographers, astronauts, and others keep their tools properly aligned. Gimbal helps developers keep their production systems aligned with their specifications.</p>
       </section>
