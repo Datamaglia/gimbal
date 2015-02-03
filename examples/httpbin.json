@@ -1,178 +1,95 @@
 {
-    "settings": {
-        "concurrentRequests": 3,
-        "suppressSuccess": true,
-        "suppressWarning": true,
-        "suppressFailure": true
-    },
-    "defaultOptions": {
-        "maxAttempts": 10,
-        "timeElapsedDelta": 0.5
-    },
-    "defaultRequest": {
-        "host": "httpbin.org",
-        "port": 443,
-        "SSL": true,
-        "method": "GET"
-    },
-    "defaultResponse": {
-        "statusCode": 200,
-        "timeElapsed": 1.0,
-        "attempts": 1
-    },
-    "specs": [{
-        "request": {
-            "url": "http://fakeandnonexistentdomain.com"
-        },
-        "response": {
-            "statusCode": 201
-        }
-    },{
-        "request": {
+    "host": "httpbin.org",
+    "maxTimeElapsed": 0.5,
+    "timeElapsedDelta": 0.5,
+    "ssl": true,
+    "specs": [
+        {
             "uri": "/"
         },
-        "response": {
-        }
-    },{
-        "request": {
-            "uri": "/ip"
-        },
-        "response": {
-            "headers": {
+        {
+            "uri": "/ip",
+            "responseHeaders": {
                 "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/user-agent"
         },
-        "response": {
-            "headers": {
+        {
+            "uri": "/user-agent",
+            "responseHeaders": {
                 "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
+        },
+        {
             "uri": "/headers",
-            "headers": {
+            "requestHeaders": {
                 "Test-Header": ["Gimbal"]
-            }
-        },
-        "response": {
-            "headers": {
+            },
+            "responseHeaders": {
                 "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/get"
         },
-        "response": {
-            "headers": {
+        {
+            "uri": "/get",
+            "responseHeaders": {
                 "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
+        },
+        {
+            "uri": "/post",
             "method": "POST",
-            "uri": "/post"
-        },
-        "response": {
-            "headers": {
-                "Content-Type": ["application/json"],
-                "Server": ["nginx"]
+            "responseHeaders": {
+                "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
+        },
+        {
+            "uri": "/patch",
             "method": "PATCH",
-            "uri": "/patch"
-        },
-        "response": {
-            "headers": {
-                "Content-Type": ["application/json"],
-                "Server": ["nginx"]
+            "responseHeaders": {
+                "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
+        },
+        {
+            "uri": "/put",
             "method": "PUT",
-            "uri": "/put"
-        },
-        "response": {
-            "headers": {
-                "Content-Type": ["application/json"],
-                "Server": ["nginx"]
+            "responseHeaders": {
+                "Content-Type": ["application/json"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/encoding/utf8"
         },
-        "response": {
-            "headers": {
+        {
+            "uri": "/encoding/utf8",
+            "responseHeaders": {
                 "Content-Type": ["text/html; charset=utf-8"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/gzip",
-            "headers": {
-                "Accept-Encoding": ["gzip, deflate, sdch"]
-            }
         },
-        "response": {
-            "headers": {
+        {
+            "uri": "/gzip",
+            "requestHeaders": {
+                "Accept-Encoding": ["gzip, deflate, sdch"]
+            },
+            "responseHeaders": {
                 "Content-Type": ["application/json"],
                 "Content-Encoding": ["gzip"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/deflate",
-            "headers": {
-                "Accept-Encoding": ["gzip, deflate, sdch"]
-            }
         },
-        "response": {
-            "headers": {
+        {
+            "uri": "/deflate",
+            "requestHeaders": {
+                "Accept-Encoding": ["gzip, deflate, sdch"]
+            },
+            "responseHeaders": {
                 "Content-Type": ["application/json"],
                 "Content-Encoding": ["deflate"]
             }
-        }
-    },{
-        "request": {
-            "uri": "/status/418"
         },
-        "response": {
+        {
+            "uri": "/status/418",
             "statusCode": 418
-        }
-    },{
-        "request": {
-            "uri": "/response-headers?Test-Header=Test-Value"
         },
-        "response": {
-            "statusCode": 200,
-            "headers": {
+        {
+            "uri": "/response-headers?Test-Header=Test-Value",
+            "responseHeaders": {
                 "Test-Header": ["Test-Value"]
             }
         }
-    },{
-        "request": {
-            "uri": "/redirect-to?url=/"
-        },
-        "response": {
-            "statusCode": 200
-        }
-    },{
-        "request": {
-            "uri": "/cache",
-            "headers": {
-                "If-None-Match": ["*"]
-            }
-        },
-        "response": {
-            "statusCode": 304
-        }
-    }]
+    ]
 }
