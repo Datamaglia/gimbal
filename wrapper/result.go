@@ -1,4 +1,4 @@
-package printer
+package wrapper
 
 import (
 	"github.com/datamaglia/gimbal/spec"
