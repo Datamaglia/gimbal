@@ -1,4 +1,4 @@
-package runner
+package wrapper
 
 import (
 	"net/http"
