@@ -9,6 +9,7 @@ import (
 
 	"github.com/datamaglia/gimbal/printer"
 	"github.com/datamaglia/gimbal/spec"
+	"github.com/datamaglia/gimbal/wrapper"
 )
 
 // Create a custom ReadCloser because that's the only way we can get a string
@@ -20,9 +21,9 @@ type BodyWrapper struct {
 func (BodyWrapper) Close() error { return nil }
 
 func RunSpec(s *spec.Spec) {
-	requestQueue := make(chan chan *Wrapper, 0)
-	checkQueue := make(chan *Wrapper, 0)
-	outputQueue := make(chan *Wrapper, 0)
+	requestQueue := make(chan chan *wrapper.Wrapper, 0)
+	checkQueue := make(chan *wrapper.Wrapper, 0)
+	outputQueue := make(chan *wrapper.Wrapper, 0)
 
 	// TODO Consider making TIMEOUT configurable / overridable
 	client := http.Client{Timeout: TIMEOUT * time.Second}
@@ -60,9 +61,7 @@ func RunSpec(s *spec.Spec) {
 	outputGroup.Add(1)
 	go func() {
 		for nextWrapper := range outputQueue {
-			for _, resultSet := range nextWrapper.ResultSets {
-				printer.ResultsToConsole(resultSet)
-			}
+			printer.ResultsToConsole(nextWrapper)
 		}
 		outputGroup.Done()
 	}()
@@ -80,17 +79,17 @@ func RunSpec(s *spec.Spec) {
 	outputGroup.Wait()
 }
 
-func runSpec(s *spec.Spec, requestQueue chan<- (chan *Wrapper)) {
+func runSpec(s *spec.Spec, requestQueue chan<- (chan *wrapper.Wrapper)) {
 	terminalChildren := s.TerminalChildren()
 
 	if terminalChildren > 0 {
-		wrappers := make(chan *Wrapper, terminalChildren)
+		wrappers := make(chan *wrapper.Wrapper, terminalChildren)
 		for i := 0; i < s.ConcurrentRequests; i++ {
 			requestQueue <- wrappers
 		}
 		for _, spec := range s.Specs {
 			if spec.Terminal() {
-				w := new(Wrapper)
+				w := new(wrapper.Wrapper)
 				w.Spec = spec
 				wrappers <- w
 			}
@@ -106,9 +105,9 @@ func runSpec(s *spec.Spec, requestQueue chan<- (chan *Wrapper)) {
 	}
 }
 
-func sendRequest(w *Wrapper, client *http.Client) {
+func sendRequest(w *wrapper.Wrapper, client *http.Client) {
 	maxAttempts := w.Spec.MaxAttempts
-	for w.Attempt() < maxAttempts {
+	for w.AttemptCount() < maxAttempts {
 		req := new(http.Request)
 		req.Method = w.Spec.Method
 		req.URL = w.Spec.Url()
@@ -119,7 +118,7 @@ func sendRequest(w *Wrapper, client *http.Client) {
 		resp, err := client.Do(req)
 		elapsed := time.Since(start)
 
-		att := Attempt{req, resp, err, elapsed.Seconds()}
+		att := wrapper.Attempt{req, resp, err, elapsed.Seconds()}
 		w.AddAttempt(&att)
 
 		if att.Err == nil {

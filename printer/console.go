@@ -1,44 +1,48 @@
 package printer
 
 import (
+	"github.com/datamaglia/gimbal/wrapper"
 	"github.com/wsxiaoys/terminal/color"
 )
 
-func ResultsToConsole(resultSet *ResultSet) {
+const successSymbol string = "\u2713"
+const failureSymbol string = "\u2718"
+
+func ResultsToConsole(w *wrapper.Wrapper) {
 	prefix := ""
-	switch resultSet.Status() {
-	case SUCCESS:
-		prefix = "@g\u2713 "
-	case WARNING:
-		prefix = "@y\u2713 "
-	case FAILURE:
-		prefix = "@r\u2718 "
+	switch w.Status() {
+	case wrapper.SUCCESS:
+		prefix = "@g" + successSymbol + " "
+	case wrapper.WARNING:
+		prefix = "@y" + successSymbol + " "
+	case wrapper.FAILURE:
+		prefix = "@r" + failureSymbol + " "
 	}
 
-	if resultSet.Spec.Name == "" {
-		color.Printf(prefix+"%v\n", resultSet.Spec.Url())
+	if w.Spec.Name == "" {
+		color.Printf(prefix+"%v\n", w.Spec.Url())
 	} else {
-		color.Printf(prefix+"%v\n", resultSet.Spec.Name)
+		color.Printf(prefix+"%v\n", w.Spec.Name)
 	}
 
-	for _, result := range resultSet.Results {
+	for _, result := range w.Results {
 		symbolPrefix := ""
 		colorPrefix := ""
 		switch result.Status {
-		case SUCCESS:
-			symbolPrefix = "@g  \u2713 "
+		case wrapper.SUCCESS:
+			symbolPrefix = "@g  " + successSymbol + " "
 			colorPrefix = "@g"
-		case WARNING:
-			symbolPrefix = "@y  \u2713 "
+		case wrapper.WARNING:
+			symbolPrefix = "@y  " + successSymbol + " "
 			colorPrefix = "@y"
-		case FAILURE:
-			symbolPrefix = "@r  \u2718 "
+		case wrapper.FAILURE:
+			symbolPrefix = "@r  " + failureSymbol + " "
 			colorPrefix = "@r"
 		}
-		color.Printf(symbolPrefix+"%v\n", result.Message)
+		color.Printf(symbolPrefix+"%v\n", result.CheckName)
 		color.Printf(colorPrefix+"    Observed: %v\n", result.Observed)
 
-		if result.Status != SUCCESS {
+		if result.Status != wrapper.SUCCESS {
 			color.Printf(colorPrefix+"    Expected: %v\n", result.Expected)
 		}
 	}

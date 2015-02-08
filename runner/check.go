@@ -1,103 +1,85 @@
 package runner
 
 import (
-	"fmt"
-
-	"github.com/datamaglia/gimbal/printer"
+	"github.com/datamaglia/gimbal/wrapper"
 )
 
-func checkWrapper(w *Wrapper) {
-	rs := new(printer.ResultSet)
-	rs.Spec = w.Spec
-	var r *printer.Result
+func checkWrapper(w *wrapper.Wrapper) {
+	w.Results = make([]*wrapper.Result, 0)
 
-	r = checkAttempts(w)
-	rs.AddResult(r)
+	checkAttempts(w)
 
-	// If the attempts failed, none of the other checks will work.
-	if r.Status == printer.FAILURE {
+	// If no connection was made then all other tests are invalid
+	if w.Status() == wrapper.FAILURE {
 		return
 	}
 
-	r = checkStatusCode(w)
-	rs.AddResult(r)
-
-	r = checkTimeElapsed(w)
-	rs.AddResult(r)
-
-	for _, r = range checkResponseHeaders(w) {
-		rs.AddResult(r)
-	}
-
-	w.ResultSets = append(w.ResultSets, rs)
+	checkStatusCode(w)
+	checkTimeElapsed(w)
+	checkResponseHeaders(w)
 }
 
-func checkAttempts(w *Wrapper) *printer.Result {
-	result := new(printer.Result)
-	attempts := w.Attempt()
+func checkAttempts(w *wrapper.Wrapper) {
+	result := new(wrapper.Result)
+	result.CheckName = "Number of attempts"
+	attempts := w.AttemptCount()
 	maxAttempts := w.Spec.MaxAttempts
 	if attempts > 1 {
 		if attempts >= maxAttempts && !w.Success() {
-			result.Message = "Too many attempts"
-			result.Status = printer.FAILURE
+			result.Status = wrapper.FAILURE
 		} else {
-			result.Message = "More than one attempt"
-			result.Status = printer.WARNING
+			result.Status = wrapper.WARNING
 		}
 	} else {
-		result.Message = "One attempt"
-		result.Status = printer.SUCCESS
+		result.Status = wrapper.SUCCESS
 	}
 	result.Expected = maxAttempts
 	result.Observed = attempts
 
-	return result
+	w.AddResult(result)
 }
 
-func checkStatusCode(w *Wrapper) *printer.Result {
-	result := new(printer.Result)
+func checkStatusCode(w *wrapper.Wrapper) {
+	result := new(wrapper.Result)
+	result.CheckName = "Status code"
 	expectedCode := w.Spec.StatusCode
 	observedCode := w.LastAttempt().Resp.StatusCode
 	if observedCode != expectedCode {
-		result.Message = "Status codes do not match"
-		result.Status = printer.FAILURE
+		result.Status = wrapper.FAILURE
 	} else {
-		result.Message = "Status codes match"
-		result.Status = printer.SUCCESS
+		result.Status = wrapper.SUCCESS
 	}
 	result.Expected = expectedCode
 	result.Observed = observedCode
 
-	return result
+	w.AddResult(result)
 }
 
-func checkTimeElapsed(w *Wrapper) *printer.Result {
-	result := new(printer.Result)
+func checkTimeElapsed(w *wrapper.Wrapper) {
+	result := new(wrapper.Result)
+	result.CheckName = "Time elapsed"
 	expectedTimeElapsed := w.Spec.MaxTimeElapsed
 	observedTimeElapsed := w.LastAttempt().TimeElapsed
 	timeElapsedDelta := w.Spec.TimeElapsedDelta
 	if observedTimeElapsed > expectedTimeElapsed {
 		if (observedTimeElapsed - expectedTimeElapsed) < timeElapsedDelta {
-			result.Message = "Request was slower than desired"
-			result.Status = printer.WARNING
+			result.Status = wrapper.WARNING
 		} else {
-			result.Message = "Request was too slow"
-			result.Status = printer.FAILURE
+			result.Status = wrapper.FAILURE
 		}
 	} else {
-		result.Message = "Request was fast enough"
-		result.Status = printer.SUCCESS
+		result.Status = wrapper.SUCCESS
 	}
 	result.Expected = expectedTimeElapsed
 	result.Observed = observedTimeElapsed
 
-	return result
+	w.AddResult(result)
 }
 
-func checkResponseHeaders(w *Wrapper) []*printer.Result {
+func checkResponseHeaders(w *wrapper.Wrapper) {
 	expectedHeaders := *w.Spec.ResponseHeaders
 	observedHeaders := w.LastAttempt().Resp.Header
-	results := make([]*printer.Result, 0)
+	results := make([]*wrapper.Result, 0)
 	for header, expectedValues := range expectedHeaders {
 		observedValues := observedHeaders[header]
 		for _, expectedValue := range expectedValues {
@@ -108,15 +90,14 @@ func checkResponseHeaders(w *Wrapper) []*printer.Result {
 				}
 			}
 			// Add a result depending on whether the result was found
-			result := new(printer.Result)
+			result := new(wrapper.Result)
+			result.CheckName = "Response headers"
 			if found {
-				result.Message = fmt.Sprintf("Header %s was correct", header)
-				result.Status = printer.SUCCESS
+				result.Status = wrapper.SUCCESS
 				result.Expected = expectedValue
 				result.Observed = expectedValue
 			} else {
-				result.Message = fmt.Sprintf("Header %s was incorrect", header)
-				result.Status = printer.FAILURE
+				result.Status = wrapper.FAILURE
 				result.Expected = expectedValue
 				result.Observed = ""
 			}
@@ -124,5 +105,7 @@ func checkResponseHeaders(w *Wrapper) []*printer.Result {
 		}
 	}
 
-	return results
+	for _, r := range results {
+		w.AddResult(r)
+	}
 }

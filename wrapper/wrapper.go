@@ -1,23 +1,16 @@
 package wrapper
 
 import (
-	"net/http"
-
-	"github.com/datamaglia/gimbal/printer"
 	"github.com/datamaglia/gimbal/spec"
 )
 
-type Attempt struct {
-	Req         *http.Request
-	Resp        *http.Response
-	Err         error
-	TimeElapsed float64
-}
+// TODO: Better error logging and graceful exit instead of just panic(...)
 
 type Wrapper struct {
-	Spec       *spec.Spec
-	Attempts   []*Attempt
-	ResultSets []*printer.ResultSet
+	Index    int
+	Spec     *spec.Spec
+	Attempts []*Attempt
+	Results  []*Result
 }
 
 func (w *Wrapper) AddAttempt(a *Attempt) {
@@ -27,17 +20,48 @@ func (w *Wrapper) AddAttempt(a *Attempt) {
 	w.Attempts = append(w.Attempts, a)
 }
 
-func (w *Wrapper) LastAttempt() *Attempt {
-	return w.Attempts[len(w.Attempts)-1]
+func (w *Wrapper) AddResult(r *Result) {
+	w.Results = append(w.Results, r)
 }
 
-func (w *Wrapper) Attempt() int {
+func (w *Wrapper) AttemptCount() int {
 	if w.Attempts == nil {
 		return 0
 	}
 	return len(w.Attempts)
 }
 
+func (w *Wrapper) LastAttempt() *Attempt {
+	if w.Attempts == nil {
+		panic("Wrapper has not yet been attempted")
+	}
+	return w.Attempts[len(w.Attempts)-1]
+}
+
 func (w *Wrapper) Success() bool {
-	return w.Attempts[len(w.Attempts)-1].Err == nil
+	return w.Status() == SUCCESS
+}
+
+func (w *Wrapper) Status() ResultStatus {
+	if w.Results == nil {
+		panic("Wrapper has not yet been checked")
+	}
+
+	failure := false
+	warning := false
+	for _, result := range w.Results {
+		if result.Status == WARNING {
+			warning = true
+		}
+		if result.Status == FAILURE {
+			failure = true
+		}
+	}
+	if failure {
+		return FAILURE
+	}
+	if warning {
+		return WARNING
+	}
+	return SUCCESS
 }
